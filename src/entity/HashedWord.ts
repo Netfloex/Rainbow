@@ -6,8 +6,5 @@ export class HashedWord {
 	index!: number
 
 	@Column({ unique: true })
-	word!: string
-
-	@Column({ unique: true })
 	md5!: string
 }

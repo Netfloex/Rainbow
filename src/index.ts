@@ -20,7 +20,7 @@ const main = async (): Promise<void> => {
 	const loop = async (index: number): Promise<void> => {
 		const word = createWordFromNumber(index)
 		const md5 = createHash(word)
-		created.push({ index, md5, word })
+		created.push({ index, md5 })
 
 		// Timings
 		timings.push(performance.now())
@@ -49,7 +49,6 @@ const main = async (): Promise<void> => {
 
 	await loop(startIndex)
 }
-
 main().catch((err) => {
 	console.log("main() exited with an error:")
 	console.error(err)
