@@ -10,7 +10,7 @@ export const AppDataSource = new DataSource({
 	password: env.DB_PASSWORD ?? "rainbow-table",
 	database: env.DB_DATABASE ?? "rainbow",
 	synchronize: true,
-	logging: true,
+	logging: false,
 	entities: [HashedWord],
 	subscribers: [],
 	migrations: [],

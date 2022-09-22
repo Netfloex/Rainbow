@@ -6,36 +6,40 @@ import { createHash } from "@utils/createHash"
 import { createWordFromNumber } from "@utils/createWordFromNumber"
 import { getStartIndex } from "@utils/getStartIndex"
 
+const TIMING_COUNT = 1000
+
 const main = async (): Promise<void> => {
 	await AppDataSource.initialize()
 	const hashedWordsRepository = AppDataSource.getRepository(HashedWord)
 	const startIndex = await getStartIndex(hashedWordsRepository)
-	const count = 1000
+	console.log("Starting at:", startIndex)
+	const timings: Array<number> = []
 
-	const started = performance.now()
-	for (let i = startIndex; i < startIndex + count; i++) {
-		const word = createWordFromNumber(i)
+	const loop = async (index: number): Promise<void> => {
+		const word = createWordFromNumber(index)
 		const md5 = createHash(word)
-		console.log(i, inspect(word), md5)
-		await hashedWordsRepository.insert({ index: i, md5, word })
+		await hashedWordsRepository.insert({ index, md5, word })
+
+		// Timings
+		timings.push(performance.now())
+		let lastThousandTiming = ""
+		if (timings.length > TIMING_COUNT) {
+			lastThousandTiming = `${(
+				(performance.now() - timings.shift()!) /
+				1000
+			).toFixed(2)}s for ${TIMING_COUNT} items`
+		}
+		if (index % TIMING_COUNT == 0 || index == startIndex)
+			console.log(index, inspect(word), md5, lastThousandTiming)
+
+		// Loop
+		setImmediate(() => loop(index + 1))
 	}
 
-	console.log(
-		"Currently there are " +
-			(await AppDataSource.manager.count(HashedWord)) +
-			" rows, inserted " +
-			count +
-			" rows in " +
-			((performance.now() - started) / 1000).toFixed(2) +
-			"s",
-	)
+	await loop(startIndex)
 }
 
-main()
-	.then(() => {
-		console.log("Done")
-	})
-	.catch((err) => {
-		console.log("main() exited with an error:")
-		console.error(err)
-	})
+main().catch((err) => {
+	console.log("main() exited with an error:")
+	console.error(err)
+})
