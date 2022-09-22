@@ -1,6 +1,10 @@
 import { AppDataSource } from "./data-source"
+import { createNumberFromWord } from "./utils/createNumberFromWord"
 import { HashedWord } from "@entity/HashedWord"
+import { version } from "package.json"
 import { inspect } from "util"
+import yargs from "yargs"
+import { hideBin } from "yargs/helpers"
 
 import { createHash } from "@utils/createHash"
 import { createWordFromNumber } from "@utils/createWordFromNumber"
@@ -8,8 +12,12 @@ import { getStartIndex } from "@utils/getStartIndex"
 
 const TIMING_COUNT = 10000
 
+const initialize = async (): Promise<void> => {
+	!AppDataSource.isInitialized && (await AppDataSource.initialize())
+}
+
 const main = async (): Promise<void> => {
-	await AppDataSource.initialize()
+	await initialize()
 	const hashedWordsRepository = AppDataSource.getRepository(HashedWord)
 	const startIndex = await getStartIndex(hashedWordsRepository)
 	console.log("Starting at:", startIndex)
@@ -49,7 +57,103 @@ const main = async (): Promise<void> => {
 
 	await loop(startIndex)
 }
-main().catch((err) => {
-	console.log("main() exited with an error:")
-	console.error(err)
-})
+
+const startMain = (): void => {
+	main().catch((err) => {
+		console.log("main() exited with an error:")
+		console.error(err)
+	})
+}
+
+yargs(hideBin(process.argv))
+	.scriptName("rainbow")
+	.version(version)
+	// .help()
+	.alias("h", "help")
+	.alias("v", "version")
+	.command("run", "Fills the table with more data", {}, () => startMain())
+	.command(
+		"search",
+		"Search for a hash in the database",
+		(yargs) =>
+			yargs.options({
+				md5: {
+					type: "string",
+					alias: "m",
+					required: true,
+				},
+			}),
+		async ({ md5 }) => {
+			await initialize()
+			const result = await AppDataSource.manager.findOneBy(HashedWord, {
+				md5,
+			})
+
+			if (!result) {
+				console.log("No result has been found")
+			} else {
+				console.log({
+					hash: result.md5,
+					index: result.index,
+					word: createWordFromNumber(result.index),
+				})
+			}
+		},
+	)
+	.command(
+		"hash",
+		"Hashes a string",
+		(yargs) =>
+			yargs.options({
+				md5: {
+					alias: "m",
+					required: true,
+					type: "string",
+				},
+			}),
+		({ md5 }) => {
+			console.log("md5 hash of " + md5)
+
+			console.log(createHash(md5))
+		},
+	)
+	.command(
+		"convert",
+		"Converts a string to a number or vice-versa",
+		(yargs) =>
+			yargs.options({
+				string: {
+					alias: "s",
+					type: "string",
+				},
+				index: {
+					alias: ["i", "n", "number"],
+					type: "number",
+				},
+			}),
+		(args) => {
+			if ([args.index, args.string].filter(Boolean).length != 1) {
+				return console.log("Invalid number of arguments")
+			}
+			if (args.index) {
+				console.log(`'${args.index}' to a word: `)
+
+				return console.log(createWordFromNumber(args.index))
+			} else if (args.string) {
+				console.log(`'${args.string}' to a number: `)
+				return console.log(createNumberFromWord(args.string))
+			}
+		},
+	)
+	.command("stats", "Shows stats", async () => {
+		await initialize()
+		const count = await AppDataSource.manager.count(HashedWord)
+		console.log(
+			`Currently storing ${new Intl.NumberFormat("en-US").format(
+				count,
+			)} rows, the last item should be: '${createWordFromNumber(count)}'`,
+		)
+	})
+	.strict()
+	.demandCommand()
+	.parse()

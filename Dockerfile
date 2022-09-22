@@ -25,4 +25,4 @@ COPY --from=builder /app/dist/index.js .
 COPY --from=builder /app/node_modules ./node_modules
 
 
-CMD [ "node", "index.js" ]
+CMD [ "node", "index.js", "run" ]

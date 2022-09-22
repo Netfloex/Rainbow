@@ -19,7 +19,8 @@
 		"target": "ES5",
 		"typeRoots": ["src/typings", "node_modules/@types"],
 		"emitDecoratorMetadata": true,
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"resolveJsonModule": true
 	},
 	"ts-node": {
 		"compilerOptions": {
