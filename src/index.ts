@@ -1,6 +1,8 @@
 import { AppDataSource } from "./data-source"
 import { createNumberFromWord } from "./utils/createNumberFromWord"
+import { formatLargeNumber } from "./utils/formatLargeNumber"
 import { HashedWord } from "@entity/HashedWord"
+import chalk from "chalk"
 import { version } from "package.json"
 import { inspect } from "util"
 import yargs from "yargs"
@@ -90,7 +92,7 @@ yargs(hideBin(process.argv))
 			})
 
 			if (!result) {
-				console.log("No result has been found")
+				console.log(chalk`{red No result has been found.}`)
 			} else {
 				console.log({
 					hash: result.md5,
@@ -112,9 +114,9 @@ yargs(hideBin(process.argv))
 				},
 			}),
 		({ md5 }) => {
-			console.log("md5 hash of " + md5)
+			console.log(chalk`md5 hash of {dim ${inspect(md5)}}`)
 
-			console.log(createHash(md5))
+			console.log(chalk.yellow(createHash(md5)))
 		},
 	)
 	.command(
@@ -133,15 +135,26 @@ yargs(hideBin(process.argv))
 			}),
 		(args) => {
 			if ([args.index, args.string].filter(Boolean).length != 1) {
-				return console.log("Invalid number of arguments")
+				return console.log(chalk.red("Invalid number of arguments"))
 			}
 			if (args.index) {
-				console.log(`'${args.index}' to a word: `)
+				console.log(
+					chalk`Converting: {dim ${inspect(args.index)}} to a word:`,
+				)
 
-				return console.log(createWordFromNumber(args.index))
+				return console.log(
+					chalk.yellow(inspect(createWordFromNumber(args.index))),
+				)
 			} else if (args.string) {
-				console.log(`'${args.string}' to a number: `)
-				return console.log(createNumberFromWord(args.string))
+				console.log(
+					chalk`Converting: {dim ${inspect(
+						args.string,
+					)}} to a number:`,
+				)
+
+				return console.log(
+					chalk.yellow(inspect(createNumberFromWord(args.string))),
+				)
 			}
 		},
 	)
@@ -149,9 +162,11 @@ yargs(hideBin(process.argv))
 		await initialize()
 		const count = await AppDataSource.manager.count(HashedWord)
 		console.log(
-			`Currently storing ${new Intl.NumberFormat("en-US").format(
+			chalk`Currently storing {yellow {bold ${formatLargeNumber(
 				count,
-			)} rows, the last item should be: '${createWordFromNumber(count)}'`,
+			)}}} rows, the last item should be: {yellow ${inspect(
+				createWordFromNumber(count),
+			)}}`,
 		)
 	})
 	.strict()
