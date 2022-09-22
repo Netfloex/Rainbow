@@ -10,9 +10,8 @@
 		"noEmit": true,
 		"outDir": "dist",
 		"paths": {
-			"@lib": ["src/lib"],
 			"@typings/*": ["src/typings/*"],
-			"@utils": ["src/utils"]
+			"@utils/*": ["src/utils/*"]
 		},
 		"skipLibCheck": true,
 		"strict": true,
