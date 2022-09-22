@@ -30,7 +30,7 @@ jobs:
               uses: docker/metadata-action@v4
               with:
                   images: |
-                      netfloex/template
+                      netfloex/rainbow
                   tags: |
                       type=semver,pattern=v{{major}}.{{minor}}.{{patch}}
                       type=semver,pattern=v{{major}}.{{minor}}
