@@ -6,7 +6,7 @@ import { createHash } from "@utils/createHash"
 import { createWordFromNumber } from "@utils/createWordFromNumber"
 import { getStartIndex } from "@utils/getStartIndex"
 
-const TIMING_COUNT = 1000
+const TIMING_COUNT = 10000
 
 const main = async (): Promise<void> => {
 	await AppDataSource.initialize()
@@ -15,10 +15,12 @@ const main = async (): Promise<void> => {
 	console.log("Starting at:", startIndex)
 	const timings: Array<number> = []
 
+	const created: Array<HashedWord> = []
+
 	const loop = async (index: number): Promise<void> => {
 		const word = createWordFromNumber(index)
 		const md5 = createHash(word)
-		await hashedWordsRepository.insert({ index, md5, word })
+		created.push({ index, md5, word })
 
 		// Timings
 		timings.push(performance.now())
@@ -29,8 +31,17 @@ const main = async (): Promise<void> => {
 				1000
 			).toFixed(2)}s for ${TIMING_COUNT} items`
 		}
-		if (index % TIMING_COUNT == 0 || index == startIndex)
+		if (index % TIMING_COUNT == 0 || index == startIndex) {
 			console.log(index, inspect(word), md5, lastThousandTiming)
+
+			console.log("Loop, putting " + created.length + " inside db...")
+			await hashedWordsRepository
+				.createQueryBuilder()
+				.insert()
+				.values(created)
+				.execute()
+			created.length = 0
+		}
 
 		// Loop
 		setImmediate(() => loop(index + 1))
