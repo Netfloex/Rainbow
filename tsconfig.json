@@ -11,12 +11,15 @@
 		"outDir": "dist",
 		"paths": {
 			"@typings/*": ["src/typings/*"],
-			"@utils/*": ["src/utils/*"]
+			"@utils/*": ["src/utils/*"],
+			"@entity/*": ["src/entity/*"]
 		},
 		"skipLibCheck": true,
 		"strict": true,
 		"target": "ES5",
-		"typeRoots": ["src/typings", "node_modules/@types"]
+		"typeRoots": ["src/typings", "node_modules/@types"],
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true
 	},
 	"ts-node": {
 		"compilerOptions": {

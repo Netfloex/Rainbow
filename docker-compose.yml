@@ -1,0 +1,15 @@
+version: "3"
+services:
+    database:
+        image: postgres:alpine
+        container_name: postgres
+        volumes:
+            - postgres:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: rainbow
+            POSTGRES_PASSWORD: rainbow-table
+        ports:
+            - 5432:5432
+
+volumes:
+    postgres:
