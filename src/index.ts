@@ -22,9 +22,10 @@ const main = async (): Promise<void> => {
 	await initialize()
 	const hashedWordsRepository = AppDataSource.getRepository(HashedWord)
 	const startIndex = await getStartIndex(hashedWordsRepository)
-	console.log("Starting at:", startIndex)
-	const timings: Array<number> = []
 
+	console.log(chalk`Starting at: {yellow ${formatLargeNumber(startIndex)}}`)
+
+	const timings: Array<number> = []
 	const created: Array<HashedWord> = []
 
 	const loop = async (index: number): Promise<void> => {
@@ -34,17 +35,23 @@ const main = async (): Promise<void> => {
 
 		// Timings
 		timings.push(performance.now())
-		let lastThousandTiming = ""
 		if (timings.length > TIMING_COUNT) {
-			lastThousandTiming = `${(
-				(performance.now() - timings.shift()!) /
-				1000
-			).toFixed(2)}s for ${TIMING_COUNT} items`
+			timings.shift()
 		}
-		if (index % TIMING_COUNT == 0 || index == startIndex) {
-			console.log(index, inspect(word), md5, lastThousandTiming)
 
-			console.log("Loop, putting " + created.length + " inside db...")
+		if (index % TIMING_COUNT == 0 || index == startIndex) {
+			const msDifference = performance.now() - timings[0]!
+			const msDifferenceAvg = msDifference / timings.length
+			const lastThousandTiming = chalk`{cyan ${formatLargeNumber(
+				1000 / msDifferenceAvg,
+			)} ops/s} {magenta ${formatLargeNumber(msDifferenceAvg)}ms}`
+
+			console.log(
+				chalk`{green ${formatLargeNumber(index)}} {yellow ${inspect(
+					word,
+				)}} {blue ${md5}} ${lastThousandTiming}`,
+			)
+
 			await hashedWordsRepository
 				.createQueryBuilder()
 				.insert()
@@ -96,7 +103,7 @@ yargs(hideBin(process.argv))
 			} else {
 				console.log({
 					hash: result.md5,
-					index: result.index,
+					index: formatLargeNumber(result.index),
 					word: createWordFromNumber(result.index),
 				})
 			}
@@ -153,7 +160,9 @@ yargs(hideBin(process.argv))
 				)
 
 				return console.log(
-					chalk.yellow(inspect(createNumberFromWord(args.string))),
+					chalk.yellow(
+						formatLargeNumber(createNumberFromWord(args.string)),
+					),
 				)
 			}
 		},
