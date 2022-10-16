@@ -178,7 +178,7 @@ yargs(hideBin(process.argv))
 			chalk`Currently storing {yellow {bold ${formatLargeNumber(
 				count,
 			)}}} rows, the last item should be: {yellow ${inspect(
-				createWordFromNumber(count),
+				createWordFromNumber(count - 1),
 			)}}`,
 		)
 	})
