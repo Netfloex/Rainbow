@@ -12,7 +12,7 @@ import { createHash } from "@utils/createHash"
 import { createWordFromNumber } from "@utils/createWordFromNumber"
 import { getStartIndex } from "@utils/getStartIndex"
 
-const TIMING_COUNT = 10000
+const TIMING_COUNT: number = parseInt(process.env.TIMING_COUNT ?? "") || 10000
 
 const initialize = async (): Promise<void> => {
 	!AppDataSource.isInitialized && (await AppDataSource.initialize())
@@ -46,17 +46,21 @@ const main = async (): Promise<void> => {
 				1000 / msDifferenceAvg,
 			)} ops/s} {magenta ${formatLargeNumber(msDifferenceAvg)}ms}`
 
-			console.log(
-				chalk`{green ${formatLargeNumber(index)}} {yellow ${inspect(
-					word,
-				)}} {blue ${md5}} ${lastThousandTiming}`,
-			)
-
+			const beforeSave = performance.now()
 			await hashedWordsRepository
 				.createQueryBuilder()
 				.insert()
 				.values(created)
 				.execute()
+
+			console.log(
+				chalk`{green ${formatLargeNumber(index)}} {yellow ${inspect(
+					word,
+				)}} {blue ${md5}} ${lastThousandTiming} {yellow ${formatLargeNumber(
+					performance.now() - beforeSave,
+				)}ms write}`,
+			)
+
 			created.length = 0
 		}
 
